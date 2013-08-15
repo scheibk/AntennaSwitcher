@@ -16,7 +16,16 @@ public class DataConnectionChangeListener extends PhoneStateListener {
 	
 	List<DataChangeReactor> reactors;
 	
-	public DataConnectionChangeListener() {
+	private static DataConnectionChangeListener instance;
+	
+	public static DataConnectionChangeListener getInstance() {
+		if(instance == null) {
+			instance = new DataConnectionChangeListener();
+		}
+		return instance;
+	}
+	
+	private DataConnectionChangeListener() {
 		super();
 		reactors = new ArrayList<DataChangeReactor>();
 	}
@@ -28,12 +37,18 @@ public class DataConnectionChangeListener extends PhoneStateListener {
 		for(DataChangeReactor dcr: reactors) {
 			dcr.onChange(state, networkType);
 		}
+		
+		
 	}
 	
 	public void addReactor(DataChangeReactor dcr)  {
 		if(dcr != null) {
 			reactors.add(dcr);
 		}
+	}
+	
+	public void removeReactor(DataChangeReactor dcr) {
+		reactors.remove(dcr);
 	}
 
 }

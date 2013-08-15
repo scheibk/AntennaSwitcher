@@ -1,6 +1,8 @@
 package com.example.antennaswitcher;
 
 import android.app.Activity;
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -14,7 +16,6 @@ import android.widget.TextView;
 
 public class MainActivity extends Activity implements DataChangeReactor {
 	
-	private DataConnectionChangeListener listener;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -45,44 +46,15 @@ public class MainActivity extends Activity implements DataChangeReactor {
 	}
 	
 	private void registerListener() {
-		if(listener == null) {
-			listener = new DataConnectionChangeListener();
-			listener.addReactor(this);
-		}
+		
+		DataConnectionChangeListener.getInstance().addReactor(this);
 		TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(listener, PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
+		tm.listen(DataConnectionChangeListener.getInstance(),
+				PhoneStateListener.LISTEN_DATA_CONNECTION_STATE);
 	}
 	
 	private void setConnectionType(int networkType) {
-		String type;
-		switch(networkType) {
-			case TelephonyManager.NETWORK_TYPE_1xRTT: 
-				type = "1xRTT (CDMA)";
-				break;
-			case TelephonyManager.NETWORK_TYPE_EDGE:
-				type = "EDGE";
-				break;
-			case TelephonyManager.NETWORK_TYPE_EVDO_0:
-				type = "EVDO 0";
-				break;
-			case TelephonyManager.NETWORK_TYPE_EVDO_A:
-				type = "EVDO A";
-				break;
-			case TelephonyManager.NETWORK_TYPE_EVDO_B :
-				type = "EVDO B";
-				break;
-			case TelephonyManager.NETWORK_TYPE_CDMA	:
-				type = "3G (CDMA)";
-				break;
-			case TelephonyManager.NETWORK_TYPE_EHRPD : 
-				type = "3G (EHRPD)";
-				break;
-			case TelephonyManager.NETWORK_TYPE_LTE :
-				type = "4G (LTE)";
-				break;
-			default:
-				type = "unknown";
-		}
+		String type = NetworkTypeTranslator.translateNetworkType(networkType);
 		
 		TextView textView = (TextView)findViewById(R.id.textView1);
 		textView.setText(type);
@@ -102,13 +74,20 @@ public class MainActivity extends Activity implements DataChangeReactor {
 	@Override
 	protected void onDestroy() {
 		super.onDestroy();
-		TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-		tm.listen(listener, PhoneStateListener.LISTEN_NONE);
+		DataConnectionChangeListener.getInstance().removeReactor(this);
 	}
 	
 	@Override
 	public void onChange(int state, int type) {
 		setConnectionType(type);
+		
+		Intent intent = new Intent(this,AntennaWidget.class);
+		intent.setAction("android.appwidget.action.APPWIDGET_UPDATE");
+		
+		AppWidgetManager widgetManager = AppWidgetManager.getInstance(getApplicationContext());
+		int[] widgetIds = widgetManager.getAppWidgetIds(new ComponentName(this, AntennaWidget.class));
+		intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_IDS, widgetIds);
+		sendBroadcast(intent);
 		
 	}
 

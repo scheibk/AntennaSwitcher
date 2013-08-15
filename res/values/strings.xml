@@ -4,5 +4,7 @@
     <string name="app_name">AntennaSwitcher</string>
     <string name="action_settings">Settings</string>
     <string name="warning">Due to the restricted nature of the settings that need to be changed. You can click on the button to change these settings.</string>
+    <string name="appwidget_text">Blah</string>
+    <string name="add_widget">Add widget</string>
 
 </resources>
